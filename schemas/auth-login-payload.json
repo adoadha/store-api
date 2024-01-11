@@ -1,0 +1,17 @@
+{
+  "$id": "authLoginPayload",
+  "title": "Auth Login Payload Schema",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "format": "email",
+      "minLength": 1
+    },
+    "password": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": ["email", "password"]
+}
