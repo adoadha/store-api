@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "baseUrl": "./", // Ubah baseUrl ke lokasi root proyek
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "target": "es2018", // Ganti target ke versi yang lebih baru jika diperlukan
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true
+  }
+}
