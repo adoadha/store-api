@@ -4,6 +4,7 @@ import "dotenv/config";
 import fastify, { FastifyInstance } from "fastify";
 import { join } from "path";
 import config from "./constant/config";
+import fastifyCors from "@fastify/cors";
 
 const server = fastify({
   ajv: { customOptions: { coerceTypes: "array" } },
@@ -50,6 +51,30 @@ server.addHook("onResponse", (request, _reply, done) => {
 
 server.setErrorHandler(function (error, request, reply) {
   reply.code(error.statusCode ?? 0).send({ ...error });
+});
+
+server.register(fastifyCors, () => {
+  return (req: any, callback: any) => {
+    const corsOptions = {
+      // This is NOT recommended for production as it enables reflection exploits
+      origin: config.ORIGIN,
+      allowedHeaders: [
+        "Accept",
+        "Authorization",
+        "Content-Type",
+        "If-None-Match",
+        "Accept-language",
+        "cache-control",
+        "x-requested-with",
+      ],
+    };
+
+    if (/^localhost$/m.test(req.headers.origin)) {
+      corsOptions.origin = "*";
+    }
+
+    callback(null, corsOptions);
+  };
 });
 
 export const app: FastifyInstance = server;
