@@ -2,6 +2,7 @@ import { FastifyPluginAsync } from "fastify";
 import fp from "fastify-plugin";
 import * as handler from "./handler";
 import categorySchema from "./category-schema.json";
+import productSchema from "./product-schema.json";
 import auth from "@/middlewares/auth";
 
 const pluginAsync: FastifyPluginAsync = async (fastify, _option) => {
@@ -24,6 +25,20 @@ const pluginAsync: FastifyPluginAsync = async (fastify, _option) => {
     url: "/product/category",
     method: "GET",
     handler: handler.getCategoryProduct,
+    preHandler: [auth],
+  });
+  fastify.route({
+    url: "/product/create",
+    method: "POST",
+    handler: handler.createNewProduct,
+    schema: {
+      body: productSchema,
+    },
+  });
+  fastify.route({
+    url: "/product/delete",
+    method: "DELETE",
+    handler: handler.deleteProduct,
     preHandler: [auth],
   });
 };
