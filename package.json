@@ -19,6 +19,7 @@
     "dotenv": "^16.3.1",
     "fastify": "^4.25.2",
     "fastify-plugin": "^4.5.1",
+    "jscord-storage": "^1.0.3",
     "logger": "^0.0.1",
     "nodemon": "^3.0.2",
     "pg-promise": "^11.5.4",

@@ -1,4 +1,4 @@
-import { ICategory } from "@/interfaces/product";
+import { ICategory, IProduct } from "@/interfaces/product";
 import ProductRepository from "@/repository/product.repository";
 import ProductService from "@/service/product/product.service";
 import { ErrorHandle } from "@/utils/error-helpers";
@@ -54,6 +54,42 @@ export const getCategoryProduct = async (
     return ResponseSuccess(reply, {
       data: response,
       message: "get Successfuly",
+    });
+  } catch (error) {
+    return ErrorHandle(request, reply, error);
+  }
+};
+
+export const createNewProduct = async (
+  request: FastifyRequest<{ Body: IProduct }>,
+  reply: FastifyReply
+): Promise<void> => {
+  try {
+    if (request.validationError) {
+      return ErrorHandle(request, reply, request.validationError);
+    }
+
+    const response = await productSevice.createProduct(request.body);
+
+    return ResponseSuccess(reply, {
+      data: response,
+      message: "Create Successfuly",
+    });
+  } catch (error) {
+    return ErrorHandle(request, reply, error);
+  }
+};
+
+export const deleteProduct = async (
+  request: FastifyRequest<{ Body: IProduct }>,
+  reply: FastifyReply
+): Promise<void> => {
+  try {
+    const response = await productSevice.deleteCategory(request.body.id);
+
+    return ResponseSuccess(reply, {
+      data: response,
+      message: "Delete Product Successfuly",
     });
   } catch (error) {
     return ErrorHandle(request, reply, error);
