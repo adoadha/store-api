@@ -1,16 +1,16 @@
 import autoLoad from "@fastify/autoload";
 import fastifyCors from "@fastify/cors";
+import fastifyMultipart from "@fastify/multipart";
 import Ajv from "ajv";
+import cloudinary from "cloudinary";
 import "dotenv/config";
 import fastify, { FastifyInstance, FastifyRequest } from "fastify";
-import path, { join } from "path";
-import config from "./constant/config";
 import fastifyCloudinary from "fastify-cloudinary";
-import fastifyMultipart from "@fastify/multipart";
-import cloudinary from "cloudinary";
+import { join } from "path";
 import stream from "stream";
-import fs from "fs";
 import util from "util";
+import config from "./constant/config";
+import { uploadPicture } from "./lib/cloudinary";
 
 const pipeline = util.promisify(stream.pipeline);
 
@@ -100,14 +100,11 @@ server.post("/upload", async (request: FastifyRequest, reply) => {
   try {
     const data = await request.file();
 
-    if (data) {
-      await pipeline(
-        data.file,
-        server.cloudinary.uploader.upload_stream({ public_id: data.fieldname })
-      );
+    const buffer = (await data?.toBuffer()) as Buffer;
 
-      return reply.send({ url: server.cloudinary.url(data.fieldname) });
-    }
+    const res = await uploadPicture(buffer);
+
+    return reply.send(res);
   } catch (err) {
     reply.code(500).send(err);
   }
