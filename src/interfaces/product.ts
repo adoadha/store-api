@@ -1,8 +1,7 @@
 export interface ICategory {
-  id: number;
+  id?: number;
   category_name: string;
   description: string;
-  image_url: string;
 }
 
 export interface IProduct {

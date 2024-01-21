@@ -1,11 +1,13 @@
 import { ICategory, IProduct } from "@/interfaces/product";
 import ProductRepository from "@/repository/product.repository";
+import CommondService from "@/service/commond/commond.service";
 import ProductService from "@/service/product/product.service";
 import { ErrorHandle } from "@/utils/error-helpers";
 import { ResponseSuccess } from "@/utils/response";
 import { FastifyReply, FastifyRequest } from "fastify";
 
 const productRepository = new ProductRepository();
+const commondService = new CommondService();
 const productSevice = new ProductService(productRepository);
 
 export const createNewCategory = async (
@@ -13,11 +15,24 @@ export const createNewCategory = async (
   reply: FastifyReply
 ): Promise<void> => {
   try {
-    if (request.validationError) {
-      return ErrorHandle(request, reply, request.validationError);
+    // if (request.validationError) {
+    //   return ErrorHandle(request, reply, request.validationError);
+    // }
+
+    const data = await request.file();
+
+    if (!data) {
+      return ErrorHandle(request, reply, new Error("File is missing"));
     }
 
-    const response = await productSevice.createCategory(request.body);
+    const buffer = (await data?.toBuffer()) as Buffer;
+
+    const result = await commondService.uploadImage(buffer);
+
+    const response = await productSevice.createCategory(
+      request.body,
+      result?.secure_url ?? ""
+    );
 
     return ResponseSuccess(reply, {
       data: response,
@@ -33,7 +48,7 @@ export const dropCategory = async (
   reply: FastifyReply
 ): Promise<void> => {
   try {
-    const response = await productSevice.deleteCategory(request.body.id);
+    const response = await productSevice.deleteCategory(request.body.id ?? 0);
 
     return ResponseSuccess(reply, {
       data: response,

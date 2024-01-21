@@ -10,10 +10,9 @@ const pluginAsync: FastifyPluginAsync = async (fastify, _option) => {
     url: "/product/category",
     method: "POST",
     handler: handler.createNewCategory,
-    schema: {
-      body: categorySchema,
-    },
-    preHandler: [auth],
+    // schema: {
+    //   body: categorySchema,
+    // },
   });
   fastify.route({
     url: "/product/category",

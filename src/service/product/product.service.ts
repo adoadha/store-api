@@ -6,9 +6,16 @@ export default class ProductService {
     this.productRepo = productRepo;
   }
 
-  async createCategory(body: ICategory) {
+  async createCategory(body: ICategory, Image: string) {
     try {
-      const addCat = await this.productRepo.createCategory(body);
+      console.log(body, "BODY SERVICE");
+      console.log(Image, "BODY SERVICE");
+      const data = {
+        params: body,
+        Image: Image,
+      };
+
+      const addCat = await this.productRepo.createCategory(data);
 
       return addCat;
     } catch (error) {
