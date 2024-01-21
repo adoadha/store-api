@@ -1,10 +1,18 @@
 import autoLoad from "@fastify/autoload";
-import Ajv from "ajv";
-import "dotenv/config";
-import fastify, { FastifyInstance } from "fastify";
-import { join } from "path";
-import config from "./constant/config";
 import fastifyCors from "@fastify/cors";
+import fastifyMultipart from "@fastify/multipart";
+import Ajv from "ajv";
+import cloudinary from "cloudinary";
+import "dotenv/config";
+import fastify, { FastifyInstance, FastifyRequest } from "fastify";
+import fastifyCloudinary from "fastify-cloudinary";
+import { join } from "path";
+import stream from "stream";
+import util from "util";
+import config from "./constant/config";
+import { uploadPicture } from "./lib/cloudinary";
+
+const pipeline = util.promisify(stream.pipeline);
 
 const server = fastify({
   ajv: { customOptions: { coerceTypes: "array" } },
@@ -75,6 +83,31 @@ server.register(fastifyCors, () => {
 
     callback(null, corsOptions);
   };
+});
+
+server.register(fastifyMultipart);
+server.register(fastifyCloudinary, {
+  url: `cloudinary://${config.CLOUD_API_KEY}:${config.CLOUD_API_SECRET}@${config.CLOUD_NAME}`,
+});
+
+cloudinary.v2.config({
+  cloudName: config.CLOUD_NAME,
+  apiKey: config.CLOUD_API_KEY,
+  apiSecret: config.CLOUD_API_SECRET,
+});
+
+server.post("/upload", async (request: FastifyRequest, reply) => {
+  try {
+    const data = await request.file();
+
+    const buffer = (await data?.toBuffer()) as Buffer;
+
+    const res = await uploadPicture(buffer);
+
+    return reply.send(res);
+  } catch (err) {
+    reply.code(500).send(err);
+  }
 });
 
 export const app: FastifyInstance = server;
