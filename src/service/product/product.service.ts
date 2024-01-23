@@ -1,4 +1,4 @@
-import { ICategory, IProduct } from "@/interfaces/product";
+import { ICategory, ICreateCategory, IProduct } from "@/interfaces/product";
 import ProductRepository from "@/repository/product.repository";
 
 export default class ProductService {
@@ -6,15 +6,12 @@ export default class ProductService {
     this.productRepo = productRepo;
   }
 
-  async createCategory(body: ICategory, Image: string) {
-    try {
-      console.log(body, "BODY SERVICE");
-      console.log(Image, "BODY SERVICE");
-      const data = {
-        params: body,
-        Image: Image,
-      };
+  async createCategory(request: ICreateCategory) {
+    const data = {
+      params: request,
+    };
 
+    try {
       const addCat = await this.productRepo.createCategory(data);
 
       return addCat;

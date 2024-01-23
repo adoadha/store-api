@@ -1,4 +1,9 @@
-import { ICategory, IProduct } from "@/interfaces/product";
+import {
+  CreateCategoryBodySchema,
+  ICategory,
+  ICreateCategory,
+  IProduct,
+} from "@/interfaces/product";
 import ProductRepository from "@/repository/product.repository";
 import CommondService from "@/service/commond/commond.service";
 import ProductService from "@/service/product/product.service";
@@ -10,33 +15,36 @@ const productRepository = new ProductRepository();
 const commondService = new CommondService();
 const productSevice = new ProductService(productRepository);
 
+function getAll(): string {
+  try {
+    return "test";
+  } catch (error) {
+    return "";
+  }
+}
+
 export const createNewCategory = async (
-  request: FastifyRequest<{ Body: ICategory }>,
+  request: FastifyRequest<{ Body: CreateCategoryBodySchema }>,
   reply: FastifyReply
 ): Promise<void> => {
   try {
-    // if (request.validationError) {
-    //   return ErrorHandle(request, reply, request.validationError);
-    // }
-
-    const data = await request.file();
-
-    if (!data) {
-      return ErrorHandle(request, reply, new Error("File is missing"));
+    if (request.validationError) {
+      return ErrorHandle(request, reply, request.validationError);
     }
 
-    const buffer = (await data?.toBuffer()) as Buffer;
+    const result = await commondService.uploadImage(request.body.image);
 
-    const result = await commondService.uploadImage(buffer);
+    const payload: ICreateCategory = {
+      category_name: request.body.category_name,
+      description: request.body.description,
+      image_url: result?.secure_url ?? "",
+    };
 
-    const response = await productSevice.createCategory(
-      request.body,
-      result?.secure_url ?? ""
-    );
+    const newCategory = await productSevice.createCategory(payload);
 
     return ResponseSuccess(reply, {
-      data: response,
-      message: "Create Successfuly",
+      data: newCategory,
+      message: "success",
     });
   } catch (error) {
     return ErrorHandle(request, reply, error);

@@ -1,4 +1,9 @@
-import { ICategory, IProduct, IVariationProduct } from "@/interfaces/product";
+import {
+  ICategory,
+  ICreateCategory,
+  IProduct,
+  IVariationProduct,
+} from "@/interfaces/product";
 import db from "../lib/pg-connection";
 
 class ProductRepository {
@@ -17,19 +22,14 @@ class ProductRepository {
     return ProductRepository.instance;
   }
 
-  async createCategory(data: {
-    params: ICategory;
-    Image: string;
-  }): Promise<void> {
+  async createCategory(data: { params: ICreateCategory }): Promise<ICategory> {
     try {
-      console.log(data.params, "PARAMS REPO");
-      console.log(Image, "PARAMS IMAGE");
       const result = await this.DB.one(
         `       
-      INSERT INTO category (category_name , description, image_url )
+      INSERT INTO category(category_name , description, image_url )
       VALUES ($<category_name>, $<description>, $<image_url>)
       RETURNING *`,
-        data
+        data.params
       );
 
       return result;
