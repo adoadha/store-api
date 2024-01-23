@@ -1,8 +1,19 @@
 export interface ICategory {
-  id: number;
+  id?: number;
+  category_name: string;
+  description: string;
+}
+
+export interface ICreateCategory {
   category_name: string;
   description: string;
   image_url: string;
+}
+
+export interface CreateCategoryBodySchema {
+  category_name: string;
+  description: string;
+  image: Buffer;
 }
 
 export interface IProduct {

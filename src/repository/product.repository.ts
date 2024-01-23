@@ -1,5 +1,9 @@
-import { ICategory, IProduct, IVariationProduct } from "@/interfaces/product";
-import { IUser } from "../interfaces/auth";
+import {
+  ICategory,
+  ICreateCategory,
+  IProduct,
+  IVariationProduct,
+} from "@/interfaces/product";
 import db from "../lib/pg-connection";
 
 class ProductRepository {
@@ -18,16 +22,14 @@ class ProductRepository {
     return ProductRepository.instance;
   }
 
-  async createCategory(params: ICategory): Promise<void> {
+  async createCategory(data: { params: ICreateCategory }): Promise<ICategory> {
     try {
-      // tambahkan setup untuk penyimpanan images
       const result = await this.DB.one(
         `       
-      INSERT INTO category (
-         category_name , description )
-      VALUES ($<category_name>, $<description> )
+      INSERT INTO category(category_name , description, image_url )
+      VALUES ($<category_name>, $<description>, $<image_url>)
       RETURNING *`,
-        params
+        data.params
       );
 
       return result;

@@ -9,6 +9,7 @@ cloudinary.v2.config({
 
 export function uploadPicture(content: Buffer): Promise<UploadApiResponse> {
   return new Promise((resolve, reject) => {
+    console.log(content, "cloudinary content");
     cloudinary.v2.uploader
       .upload_stream(
         {
@@ -17,6 +18,7 @@ export function uploadPicture(content: Buffer): Promise<UploadApiResponse> {
         },
         (error, result) => {
           if (error) {
+            console.log(error, "CLOUDINARY ERRORX");
             reject("Upload failed");
           } else if (result) {
             resolve(result);

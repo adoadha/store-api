@@ -85,7 +85,7 @@ server.register(fastifyCors, () => {
   };
 });
 
-server.register(fastifyMultipart);
+server.register(fastifyMultipart, { attachFieldsToBody: "keyValues" });
 server.register(fastifyCloudinary, {
   url: `cloudinary://${config.CLOUD_API_KEY}:${config.CLOUD_API_SECRET}@${config.CLOUD_NAME}`,
 });
