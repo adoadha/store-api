@@ -15,14 +15,6 @@ const productRepository = new ProductRepository();
 const commondService = new CommondService();
 const productSevice = new ProductService(productRepository);
 
-function getAll(): string {
-  try {
-    return "test";
-  } catch (error) {
-    return "";
-  }
-}
-
 export const createNewCategory = async (
   request: FastifyRequest<{ Body: CreateCategoryBodySchema }>,
   reply: FastifyReply
@@ -91,6 +83,8 @@ export const createNewProduct = async (
     if (request.validationError) {
       return ErrorHandle(request, reply, request.validationError);
     }
+
+    console.log(request.body);
 
     const response = await productSevice.createProduct(request.body);
 
