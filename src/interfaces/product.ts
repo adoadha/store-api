@@ -40,4 +40,5 @@ export interface IVariationProduct {
   updated_at: string;
   price: number;
   slash_price?: number;
+  variation_stock?: number;
 }

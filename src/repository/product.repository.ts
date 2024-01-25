@@ -67,14 +67,18 @@ class ProductRepository {
       const productVariationResult = params.variation_values.map(
         (variation: IVariationProduct) =>
           this.DB.one(
-            ` INSERT INTO product_variations (product_id, variation_name, variation_sku, image_url, created_at, price, slash_price, variation_stock)
-      VALUES ( $<product_id>, $<variation_name>, $<variation_sku>, $<image_url>, NOW(), $<price>, $<slash_price>, $<variation_stock>) RETURNING *`,
+            ` INSERT INTO product_variations (product_id, variation_name, variation_sku, created_at, price, slash_price, variation_stock)
+      VALUES ( $<product_id>, $<variation_name>, $<variation_sku>, NOW(), $<price>, $<slash_price>, $<variation_stock>) RETURNING *`,
             {
               ...variation,
               product_id: productResult.id,
               slash_price:
                 variation.slash_price !== undefined
                   ? variation.slash_price
+                  : null,
+              variation_stock:
+                variation.variation_stock !== undefined
+                  ? variation.variation_stock
                   : null,
             }
           )
@@ -90,6 +94,67 @@ class ProductRepository {
     const result = await this.DB.one(`DELETE FROM product WHERE id=$1`);
 
     return;
+  }
+
+  async getProduct(): Promise<IProduct[]> {
+    // tambah left join untuK type product dan image
+    const result = await this.DB.many(`SELECT
+    p.id AS product_id,
+    p.product_name,
+    p.description,
+    p.package_weight,
+    c.category_name,
+    p.package_width,
+    p.package_height,
+    jsonb_agg(
+        jsonb_build_object(
+            'variation_name', pv.variation_name,
+            'variation_sku', pv.variation_sku,
+            'price', pv.price
+        )
+    ) AS variation_values
+FROM
+    product p
+JOIN
+    category c ON category_id = c.id
+LEFT JOIN
+    product_variations pv ON p.id = pv.product_id
+GROUP BY
+    p.id, p.product_name, p.description, p.package_weight, c.category_name, p.package_width, p.package_height;`);
+
+    return result;
+  }
+
+  async getProductById(productId: number) {
+    const result = await this.DB.oneOrNone(
+      ` SELECT
+p.id AS product_id,
+p.product_name,
+p.description,
+p.package_weight,
+c.category_name,
+p.package_width,
+p.package_height,
+jsonb_agg(
+    jsonb_build_object(
+        'variation_name', pv.variation_name,
+        'variation_sku', pv.variation_sku,
+        'price', pv.price
+    )
+) AS variation_values
+FROM
+product p  
+JOIN
+category c ON category_id = c.id
+LEFT JOIN
+product_variations pv ON p.id = pv.product_id
+WHERE p.id = $1
+GROUP BY
+p.id, p.product_name, p.description, p.package_weight, c.category_name, p.package_width, p.package_height;`,
+      productId
+    );
+
+    return result;
   }
 }
 

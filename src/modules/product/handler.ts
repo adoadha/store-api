@@ -15,14 +15,6 @@ const productRepository = new ProductRepository();
 const commondService = new CommondService();
 const productSevice = new ProductService(productRepository);
 
-function getAll(): string {
-  try {
-    return "test";
-  } catch (error) {
-    return "";
-  }
-}
-
 export const createNewCategory = async (
   request: FastifyRequest<{ Body: CreateCategoryBodySchema }>,
   reply: FastifyReply
@@ -92,6 +84,8 @@ export const createNewProduct = async (
       return ErrorHandle(request, reply, request.validationError);
     }
 
+    console.log(request.body);
+
     const response = await productSevice.createProduct(request.body);
 
     return ResponseSuccess(reply, {
@@ -113,6 +107,39 @@ export const deleteProduct = async (
     return ResponseSuccess(reply, {
       data: response,
       message: "Delete Product Successfuly",
+    });
+  } catch (error) {
+    return ErrorHandle(request, reply, error);
+  }
+};
+
+export const GetAllProduct = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<IProduct[]> => {
+  try {
+    const response = await productSevice.getProduct();
+
+    return ResponseSuccess(reply, {
+      data: response,
+      message: "get Successfuly",
+    });
+  } catch (error) {
+    return ErrorHandle(request, reply, error);
+  }
+};
+
+export const GetProductById = async (
+  request: FastifyRequest<{ Params: { ProductId: number } }>,
+  reply: FastifyReply
+) => {
+  try {
+    const id = request.params.ProductId;
+    const response = await productSevice.getProductById(id);
+
+    return ResponseSuccess(reply, {
+      data: response,
+      message: "get Successfuly",
     });
   } catch (error) {
     return ErrorHandle(request, reply, error);
