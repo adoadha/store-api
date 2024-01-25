@@ -50,5 +50,24 @@ export default class ProductService {
     }
   }
 
+  async getProduct() {
+    try {
+      const result = await this.productRepo.getProduct();
+      return result;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async getProductById(ProductId: number) {
+    try {
+      const result = await this.productRepo.getProductById(ProductId);
+
+      return result;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   async deleteProduct(product_id: number) {}
 }
