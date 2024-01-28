@@ -42,3 +42,13 @@ export interface IVariationProduct {
   slash_price?: number;
   variation_stock?: number;
 }
+
+export interface IALLProduct {
+  id: number;
+  product_name: string;
+  category_id?: string;
+  created_at: string;
+  updated_at: string;
+  variation_values: IVariationProduct[];
+  total_variations: number;
+}
