@@ -1,4 +1,5 @@
 import {
+  IALLProduct,
   ICategory,
   ICreateCategory,
   IProduct,
@@ -96,31 +97,28 @@ class ProductRepository {
     return;
   }
 
-  async getProduct(): Promise<IProduct[]> {
+  async getProduct(): Promise<IALLProduct[]> {
     // tambah left join untuK type product dan image
     const result = await this.DB.many(`SELECT
     p.id AS product_id,
     p.product_name,
-    p.description,
-    p.package_weight,
     c.category_name,
-    p.package_width,
-    p.package_height,
-    jsonb_agg(
+    array_agg(
         jsonb_build_object(
             'variation_name', pv.variation_name,
             'variation_sku', pv.variation_sku,
             'price', pv.price
         )
-    ) AS variation_values
+    ) AS variation_values,
+    COUNT(pv.variation_id) AS total_variations
 FROM
     product p
 JOIN
-    category c ON category_id = c.id
+    category c ON p.category_id = c.id
 LEFT JOIN
     product_variations pv ON p.id = pv.product_id
 GROUP BY
-    p.id, p.product_name, p.description, p.package_weight, c.category_name, p.package_width, p.package_height;`);
+    p.id, p.product_name, c.category_name;`);
 
     return result;
   }

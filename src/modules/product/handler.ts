@@ -135,6 +135,8 @@ export const GetProductById = async (
 ) => {
   try {
     const id = request.params.ProductId;
+
+    console.log(id);
     const response = await productSevice.getProductById(id);
 
     return ResponseSuccess(reply, {
