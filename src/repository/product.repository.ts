@@ -110,9 +110,13 @@ class ProductRepository {
         jsonb_build_object(
             'variation_name', pv.variation_name,
             'variation_sku', pv.variation_sku,
-            'price', pv.price
+            'price', pv.price,
+            'slash_price', pv.slash_price,
+            'grosir_price', pv.grosir_price,
+            'HPP', pv.hpp     
         )
-    ) AS variation_values
+    ) AS variation_values,
+    COUNT(pv.variation_id) AS total_variations
 FROM
     product p
 JOIN
@@ -139,8 +143,7 @@ jsonb_agg(
     jsonb_build_object(
         'variation_name', pv.variation_name,
         'variation_sku', pv.variation_sku,
-        'price', pv.price
-    )
+        'price', pv.price)
 ) AS variation_values
 FROM
 product p  
