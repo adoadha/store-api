@@ -2,6 +2,8 @@ import {
   IALLProduct,
   ICategory,
   ICreateCategory,
+  ICreateProduct,
+  ICreateVariationProduct,
   IProduct,
   IVariationProduct,
 } from "@/interfaces/product";
@@ -69,7 +71,7 @@ class ProductRepository {
         (variation: IVariationProduct) =>
           this.DB.one(
             ` INSERT INTO product_variations (product_id, variation_name, variation_sku, created_at, price, slash_price, variation_stock)
-      VALUES ( $<product_id>, $<variation_name>, $<variation_sku>, NOW(), $<price>, $<slash_price>, $<variation_stock>) RETURNING *`,
+      VALUES ( $<product_id>, $<variation_name>, $<variation_sku>, now(), $<price>, $<slash_price>, $<variation_stock>) RETURNING *`,
             {
               ...variation,
               product_id: productResult.id,
@@ -155,6 +157,45 @@ p.id, p.product_name, p.description, p.package_weight, c.category_name, p.packag
     );
 
     return result;
+  }
+
+  async createTestingProduct(params: ICreateProduct): Promise<void> {
+    try {
+      console.log(params, "REPO 1");
+      const productResult = await this.DB.one(
+        `
+        INSERT INTO product (product_name, description, category_id, package_weight, package_width, package_height, created_at)
+        VALUES (
+          $<product_name>, $<description>, $<category_id>, $<package_weight>, $<package_width>, $<package_height>, NOW()
+        ) RETURNING id
+        `,
+        params
+      );
+
+      const productVariationResult = params.variants.map(
+        async (variation: ICreateVariationProduct) => {
+          const variationsValue = JSON.stringify(variation.variation_values);
+
+          const variationResult = await this.DB.one(
+            `
+            INSERT INTO product_variations (product_id, variation_name, variation_sku, image_url, created_at, price, variation_stock, variation_values)
+            VALUES ($<product_id>, $<variation_name>, $<variation_sku>, $<image_url>, now(), $<price>, $<variation_stock>, $<variation_values>::jsonb)
+            RETURNING *
+            `,
+            {
+              ...variation,
+              product_id: productResult.id,
+              variation_values: variationsValue,
+            }
+          );
+          return variationResult;
+        }
+      );
+
+      await Promise.all(productVariationResult);
+    } catch (error) {
+      return Promise.reject(error);
+    }
   }
 }
 

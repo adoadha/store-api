@@ -2,6 +2,8 @@ import {
   CreateCategoryBodySchema,
   ICategory,
   ICreateCategory,
+  ICreateProduct,
+  IHandlerCreateProduct,
   IProduct,
 } from "@/interfaces/product";
 import ProductRepository from "@/repository/product.repository";
@@ -76,7 +78,7 @@ export const getCategoryProduct = async (
 };
 
 export const createNewProduct = async (
-  request: FastifyRequest<{ Body: IProduct }>,
+  request: FastifyRequest<{ Body: IHandlerCreateProduct }>,
   reply: FastifyReply
 ): Promise<void> => {
   try {
@@ -84,9 +86,39 @@ export const createNewProduct = async (
       return ErrorHandle(request, reply, request.validationError);
     }
 
-    console.log(request.body);
+    const result = await commondService.uploadImage(
+      request.body.variants[0].image_url
+    );
 
-    const response = await productSevice.createProduct(request.body);
+    // console.log(request.body, "HANDLER BODY");
+    const payload: ICreateProduct = {
+      id: request.body.id,
+      product_name: request.body.product_name,
+      description: request.body.description,
+      category_id: request.body.category_id,
+      package_weight: request.body.package_weight,
+      package_width: request.body.package_width,
+      package_height: request.body.package_height,
+      created_at: request.body.created_at,
+      updated_at: request.body.updated_at,
+      variants: [
+        {
+          id: request.body.variants[0].id,
+          product_id: request.body.variants[0].product_id,
+          variation_name: request.body.variants[0].variation_name,
+          variation_sku: request.body.variants[0].variation_sku,
+          image_url: result?.secure_url ?? "",
+          created_at: request.body.variants[0].created_at,
+          updated_at: request.body.variants[0].updated_at,
+          price: request.body.variants[0].price,
+          slash_price: request.body.variants[0].slash_price,
+          variation_stock: request.body.variants[0].variation_stock,
+          variation_values: request.body.variants[0].variation_values,
+        },
+      ],
+    };
+
+    const response = await productSevice.createProduct(payload);
 
     return ResponseSuccess(reply, {
       data: response,

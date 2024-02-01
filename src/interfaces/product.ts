@@ -52,3 +52,62 @@ export interface IALLProduct {
   variation_values: IVariationProduct[];
   total_variations: number;
 }
+
+export interface ICreateProduct {
+  id: number;
+  product_name: string;
+  description: string;
+  category_id?: string;
+  package_weight?: number;
+  package_width?: number;
+  package_height?: number;
+  created_at: string;
+  updated_at: string;
+  variants: ICreateVariationProduct[];
+}
+
+export interface ICreateVariationProduct {
+  id: number;
+  product_id: number;
+  variation_name: string;
+  variation_sku: string;
+  image_url?: string;
+  created_at: string;
+  updated_at: string;
+  price: number;
+  slash_price?: number;
+  variation_stock?: number;
+  variation_values: ICreateVariationValues[];
+}
+
+export interface ICreateVariationValues {
+  label: string;
+  value: string;
+}
+
+export interface IHandlerCreateProduct {
+  id: number;
+  product_name: string;
+  description: string;
+  category_id?: string;
+  package_weight?: number;
+  package_width?: number;
+  package_height?: number;
+  created_at: string;
+  updated_at: string;
+  variants: IHandlerCreateVariationProduct[];
+}
+
+export interface IHandlerCreateVariationProduct {
+  id: number;
+  product_id: number;
+  variation_name: string;
+  variation_sku: string;
+  image_url: Buffer;
+  created_at: string;
+  updated_at: string;
+  price: number;
+  slash_price?: number;
+  variation_stock?: number;
+  variation_values: ICreateVariationValues[];
+}
