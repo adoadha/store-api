@@ -11,6 +11,8 @@ const pluginAsync: FastifyPluginAsync = async (fastify, _option) => {
     method: "POST",
     handler: handler.createNewCategory,
     schema: {
+      // @ts-ignore
+      consumes: "multipart/form-data",
       body: categorySchema,
     },
     preHandler: [auth],
@@ -34,11 +36,24 @@ const pluginAsync: FastifyPluginAsync = async (fastify, _option) => {
     schema: {
       body: productSchema,
     },
+    preHandler: [auth],
   });
   fastify.route({
     url: "/product/delete",
     method: "DELETE",
     handler: handler.deleteProduct,
+    preHandler: [auth],
+  });
+  fastify.route({
+    url: "/product",
+    method: "GET",
+    handler: handler.GetAllProduct,
+    preHandler: [auth],
+  });
+  fastify.route({
+    url: "/product/:ProductId",
+    method: "GET",
+    handler: handler.GetProductById,
     preHandler: [auth],
   });
 };

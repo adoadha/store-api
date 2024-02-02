@@ -1,5 +1,10 @@
-import { ICategory, IProduct, IVariationProduct } from "@/interfaces/product";
-import { IUser } from "../interfaces/auth";
+import {
+  IALLProduct,
+  ICategory,
+  ICreateCategory,
+  IProduct,
+  IVariationProduct,
+} from "@/interfaces/product";
 import db from "../lib/pg-connection";
 
 class ProductRepository {
@@ -18,16 +23,14 @@ class ProductRepository {
     return ProductRepository.instance;
   }
 
-  async createCategory(params: ICategory): Promise<void> {
+  async createCategory(data: { params: ICreateCategory }): Promise<ICategory> {
     try {
-      // tambahkan setup untuk penyimpanan images
       const result = await this.DB.one(
         `       
-      INSERT INTO category (
-         category_name , description )
-      VALUES ($<category_name>, $<description> )
+      INSERT INTO category(category_name , description, image_url )
+      VALUES ($<category_name>, $<description>, $<image_url>)
       RETURNING *`,
-        params
+        data.params
       );
 
       return result;
@@ -90,6 +93,66 @@ class ProductRepository {
     const result = await this.DB.one(`DELETE FROM product WHERE id=$1`);
 
     return;
+  }
+
+  async getProduct(): Promise<IALLProduct[]> {
+    // tambah left join untuK type product dan image
+    const result = await this.DB.many(`SELECT
+    p.id AS product_id,
+    p.product_name,
+    c.category_name,
+    array_agg(
+        jsonb_build_object(
+            'variation_name', pv.variation_name,
+            'variation_sku', pv.variation_sku,
+            'price', pv.price,
+            'slash_price', pv.slash_price,
+            'grosir_price', pv.grosir_price,
+            'HPP', pv.hpp     
+        )
+    ) AS variation_values,
+    COUNT(pv.variation_id) AS total_variations
+FROM
+    product p
+JOIN
+    category c ON p.category_id = c.id
+LEFT JOIN
+    product_variations pv ON p.id = pv.product_id
+GROUP BY
+    p.id, p.product_name, c.category_name;`);
+
+    return result;
+  }
+
+  async getProductById(productId: number) {
+    const result = await this.DB.oneOrNone(
+      ` SELECT
+p.id AS product_id,
+p.product_name,
+p.description,
+p.package_weight,
+c.category_name,
+p.package_width,
+p.package_height,
+jsonb_agg(
+    jsonb_build_object(
+        'variation_name', pv.variation_name,
+        'variation_sku', pv.variation_sku,
+        'price', pv.price)
+) AS variation_values
+FROM
+product p  
+JOIN
+category c ON category_id = c.id
+LEFT JOIN
+product_variations pv ON p.id = pv.product_id
+WHERE p.id = $1
+GROUP BY
+p.id, p.product_name, p.description, p.package_weight, c.category_name, p.package_width, p.package_height;`,
+      productId
+    );
+
+    return result;
   }
 }
 

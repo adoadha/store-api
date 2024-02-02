@@ -1,8 +1,19 @@
 export interface ICategory {
-  id: number;
+  id?: number;
+  category_name: string;
+  description: string;
+}
+
+export interface ICreateCategory {
   category_name: string;
   description: string;
   image_url: string;
+}
+
+export interface CreateCategoryBodySchema {
+  category_name: string;
+  description: string;
+  image: Buffer;
 }
 
 export interface IProduct {
@@ -29,4 +40,15 @@ export interface IVariationProduct {
   updated_at: string;
   price: number;
   slash_price?: number;
+  variation_stock?: number;
+}
+
+export interface IALLProduct {
+  id: number;
+  product_name: string;
+  category_id?: string;
+  created_at: string;
+  updated_at: string;
+  variation_values: IVariationProduct[];
+  total_variations: number;
 }

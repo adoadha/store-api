@@ -1,15 +1,22 @@
-import { ICategory, IProduct } from "@/interfaces/product";
+import {
+  CreateCategoryBodySchema,
+  ICategory,
+  ICreateCategory,
+  IProduct,
+} from "@/interfaces/product";
 import ProductRepository from "@/repository/product.repository";
+import CommondService from "@/service/commond/commond.service";
 import ProductService from "@/service/product/product.service";
 import { ErrorHandle } from "@/utils/error-helpers";
 import { ResponseSuccess } from "@/utils/response";
 import { FastifyReply, FastifyRequest } from "fastify";
 
 const productRepository = new ProductRepository();
+const commondService = new CommondService();
 const productSevice = new ProductService(productRepository);
 
 export const createNewCategory = async (
-  request: FastifyRequest<{ Body: ICategory }>,
+  request: FastifyRequest<{ Body: CreateCategoryBodySchema }>,
   reply: FastifyReply
 ): Promise<void> => {
   try {
@@ -17,11 +24,19 @@ export const createNewCategory = async (
       return ErrorHandle(request, reply, request.validationError);
     }
 
-    const response = await productSevice.createCategory(request.body);
+    const result = await commondService.uploadImage(request.body.image);
+
+    const payload: ICreateCategory = {
+      category_name: request.body.category_name,
+      description: request.body.description,
+      image_url: result?.secure_url ?? "",
+    };
+
+    const newCategory = await productSevice.createCategory(payload);
 
     return ResponseSuccess(reply, {
-      data: response,
-      message: "Create Successfuly",
+      data: newCategory,
+      message: "success",
     });
   } catch (error) {
     return ErrorHandle(request, reply, error);
@@ -33,7 +48,7 @@ export const dropCategory = async (
   reply: FastifyReply
 ): Promise<void> => {
   try {
-    const response = await productSevice.deleteCategory(request.body.id);
+    const response = await productSevice.deleteCategory(request.body.id ?? 0);
 
     return ResponseSuccess(reply, {
       data: response,
@@ -69,6 +84,8 @@ export const createNewProduct = async (
       return ErrorHandle(request, reply, request.validationError);
     }
 
+    console.log(request.body);
+
     const response = await productSevice.createProduct(request.body);
 
     return ResponseSuccess(reply, {
@@ -90,6 +107,41 @@ export const deleteProduct = async (
     return ResponseSuccess(reply, {
       data: response,
       message: "Delete Product Successfuly",
+    });
+  } catch (error) {
+    return ErrorHandle(request, reply, error);
+  }
+};
+
+export const GetAllProduct = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+): Promise<IProduct[]> => {
+  try {
+    const response = await productSevice.getProduct();
+
+    return ResponseSuccess(reply, {
+      data: response,
+      message: "get Successfuly",
+    });
+  } catch (error) {
+    return ErrorHandle(request, reply, error);
+  }
+};
+
+export const GetProductById = async (
+  request: FastifyRequest<{ Params: { ProductId: number } }>,
+  reply: FastifyReply
+) => {
+  try {
+    const id = request.params.ProductId;
+
+    console.log(id);
+    const response = await productSevice.getProductById(id);
+
+    return ResponseSuccess(reply, {
+      data: response,
+      message: "get Successfuly",
     });
   } catch (error) {
     return ErrorHandle(request, reply, error);
