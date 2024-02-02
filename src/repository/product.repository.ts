@@ -52,33 +52,35 @@ class ProductRepository {
   }
   async createProduct(params: IProduct): Promise<void> {
     try {
-      const productResult = await this.DB.one(
-        `
-      INSERT INTO product (product_name, description, category_id, package_weight, package_width, package_height, created_at)
-      VALUES (
-        $<product_name>,  $<description>, $<category_id>, $<package_weight>, $<package_width>, $<package_height>, now()
-      ) RETURNING id
-      `,
-        params
-      );
+      await this.DB.tx(async (t) => {
+        const productResult = await t.query(
+          `
+        INSERT INTO product (product_name, description, category_id, package_weight, package_width, package_height, created_at)
+        VALUES (
+          $<product_name>,  $<description>, $<category_id>, $<package_weight>, $<package_width>, $<package_height>, now()
+        ) RETURNING id
+        `,
+          params
+        );
 
-      const productVariationResult = params.variation_values.map(
-        (variation: IVariationProduct) =>
-          this.DB.one(
-            ` INSERT INTO product_variations (product_id, variation_name, variation_sku, image_url, created_at, price, slash_price, variation_stock)
-      VALUES ( $<product_id>, $<variation_name>, $<variation_sku>, $<image_url>, NOW(), $<price>, $<slash_price>, $<variation_stock>) RETURNING *`,
-            {
-              ...variation,
-              product_id: productResult.id,
-              slash_price:
-                variation.slash_price !== undefined
-                  ? variation.slash_price
-                  : null,
-            }
-          )
-      );
+        const productVariationResult = params.variation_values.map(
+          (variation: IVariationProduct) =>
+            t.query(
+              ` INSERT INTO product_variations (product_id, variation_name, variation_sku, created_at, price, slash_price, variation_stock)
+        VALUES ( $<product_id>, $<variation_name>, $<variation_sku>, NOW(), $<price>, $<slash_price>, $<variation_stock>) RETURNING *`,
+              {
+                ...variation,
+                product_id: productResult.id,
+                slash_price:
+                  variation.slash_price !== undefined
+                    ? variation.slash_price
+                    : null,
+              }
+            )
+        );
 
-      await Promise.all(productVariationResult);
+        await Promise.all(productVariationResult);
+      });
     } catch (error) {
       return Promise.reject(error);
     }
