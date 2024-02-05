@@ -53,10 +53,10 @@ class ProductRepository {
 
     return result;
   }
-  async createProduct(params: IProduct): Promise<void> {
+  async createProduct(params: IProduct): Promise<number> {
     try {
-      await this.DB.tx(async (t) => {
-        const productResult = await t.query(
+      const productId = await this.DB.tx(async (t) => {
+        const productResult = await t.one(
           `
         INSERT INTO product (product_name, description, category_id, package_weight, package_width, package_height, created_at)
         VALUES (
@@ -66,8 +66,8 @@ class ProductRepository {
           params
         );
 
-        const productVariationResult = params.variation_values.map(
-          (variation: IVariationProduct) =>
+        const productVariationResult = await Promise.all(
+          params.variation_values.map((variation: IVariationProduct) =>
             t.query(
               ` INSERT INTO product_variations (product_id, variation_name, variation_sku, created_at, price, slash_price, variation_stock)
         VALUES ( $<product_id>, $<variation_name>, $<variation_sku>, NOW(), $<price>, $<slash_price>, $<variation_stock>) RETURNING *`,
@@ -80,10 +80,12 @@ class ProductRepository {
                     : null,
               }
             )
+          )
         );
 
-        await Promise.all(productVariationResult);
+        return productResult.id;
       });
+      return productId;
     } catch (error) {
       return Promise.reject(error);
     }

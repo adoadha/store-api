@@ -28,6 +28,7 @@ export interface IProduct {
   created_at: string;
   updated_at: string;
   variation_values: IVariationProduct[];
+  qr_code?: string;
 }
 
 export interface IVariationProduct {
