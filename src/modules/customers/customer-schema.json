@@ -1,0 +1,18 @@
+{
+  "type": "object",
+  "properties": {
+    "customer_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "customer_phone": {
+      "type": "string",
+      "minLength": 1
+    },
+    "customer_email": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": ["customer_email"]
+}
