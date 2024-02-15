@@ -36,7 +36,7 @@ const pluginAsync: FastifyPluginAsync = async (fastify, _option) => {
     schema: {
       body: productSchema,
     },
-    preHandler: [auth],
+    // preHandler: [auth],
   });
   fastify.route({
     url: "/product/delete",

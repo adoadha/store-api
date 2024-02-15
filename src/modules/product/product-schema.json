@@ -7,18 +7,34 @@
     "package_weight": { "type": "number" },
     "package_width": { "type": "number" },
     "package_height": { "type": "number" },
-    "variation_values": {
+    "variants": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
           "variation_name": { "type": "string", "minLength": 1 },
           "variation_sku": { "type": "string" },
-          "price": { "type": "number" }
+          "price": { "type": "number" },
+          "variation_values": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": { "type": "string", "minLength": 1 },
+                "value": { "type": "string" }
+              },
+              "required": ["label", "value"]
+            }
+          }
         },
-        "required": ["variation_name", "variation_sku", "price"]
+        "required": [
+          "variation_name",
+          "variation_sku",
+          "price",
+          "variation_values"
+        ]
       }
     }
   },
-  "required": ["product_name", "description", "variation_values"]
+  "required": ["product_name", "variants"]
 }

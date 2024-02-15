@@ -1,4 +1,9 @@
-import { ICategory, ICreateCategory, IProduct } from "@/interfaces/product";
+import {
+  ICategory,
+  ICreateCategory,
+  ICreateProduct,
+  IProduct,
+} from "@/interfaces/product";
 import ProductRepository from "@/repository/product.repository";
 
 export default class ProductService {
@@ -39,10 +44,10 @@ export default class ProductService {
     }
   }
 
-  async createProduct(body: IProduct) {
+  async createProduct(body: ICreateProduct) {
     // tambahkan validasi check sku sebelum upload
     try {
-      const result = await this.productRepo.createProduct(body);
+      const result = await this.productRepo.createTestingProduct(body);
 
       return result;
     } catch (error) {
