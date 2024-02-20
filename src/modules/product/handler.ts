@@ -15,7 +15,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 
 const productRepository = new ProductRepository();
 const commondService = new CommondService();
-const productSevice = new ProductService(productRepository);
+const productSevice = new ProductService(productRepository, commondService);
 
 export const createNewCategory = async (
   request: FastifyRequest<{ Body: CreateCategoryBodySchema }>,
