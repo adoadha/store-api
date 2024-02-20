@@ -161,9 +161,9 @@ p.id, p.product_name, p.description, p.package_weight, c.category_name, p.packag
     return result;
   }
 
-  async createTestingProduct(params: ICreateProduct): Promise<void> {
+  async createTestingProduct(params: ICreateProduct): Promise<{ id: number }> {
     try {
-      console.log(params, "REPO 1");
+      console.log(params, "ADO");
       const productResult = await this.DB.one(
         `
         INSERT INTO product (product_name, description, category_id, package_weight, package_width, package_height, created_at)
@@ -195,6 +195,8 @@ p.id, p.product_name, p.description, p.package_weight, c.category_name, p.packag
       );
 
       await Promise.all(productVariationResult);
+
+      return { id: productResult.id };
     } catch (error) {
       return Promise.reject(error);
     }

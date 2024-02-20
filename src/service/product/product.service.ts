@@ -1,14 +1,38 @@
-import {
-  ICategory,
-  ICreateCategory,
-  ICreateProduct,
-  IProduct,
-} from "@/interfaces/product";
+import { ICreateCategory, ICreateProduct } from "@/interfaces/product";
 import ProductRepository from "@/repository/product.repository";
+import CommondService from "../commond/commond.service";
+import * as qrcode from "qrcode";
+
+interface createProductResult {
+  id: number;
+}
 
 export default class ProductService {
-  constructor(private productRepo: ProductRepository) {
+  constructor(
+    private productRepo: ProductRepository,
+    private commondService: CommondService
+  ) {
     this.productRepo = productRepo;
+    this.commondService = commondService;
+  }
+
+  async createProduct(body: ICreateProduct) {
+    // tambahkan validasi check sku sebelum upload
+    try {
+      const result = await this.productRepo.createTestingProduct(body);
+
+      const makeQRCode = await this.generateQRCodeURL(result.id);
+
+      console.log(result.id, "RESULT UPLOAD");
+
+      const qrBuffer = await this.generateQRCodeBuffer(makeQRCode);
+
+      const qrUploadToCloud = await this.commondService.uploadImage(qrBuffer);
+
+      return result;
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async createCategory(request: ICreateCategory) {
@@ -44,17 +68,6 @@ export default class ProductService {
     }
   }
 
-  async createProduct(body: ICreateProduct) {
-    // tambahkan validasi check sku sebelum upload
-    try {
-      const result = await this.productRepo.createTestingProduct(body);
-
-      return result;
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
   async getProduct() {
     try {
       const result = await this.productRepo.getProduct();
@@ -75,4 +88,23 @@ export default class ProductService {
   }
 
   async deleteProduct(product_id: number) {}
+
+  async generateQRCodeURL(product_id: number): Promise<string> {
+    const baseUrl = "http://localhost:3000/product/";
+
+    return `${baseUrl}`;
+  }
+
+  async generateQRCodeBuffer(qrCodeUrl: string): Promise<Buffer> {
+    try {
+      const qrCodeDataUrl = await qrcode.toDataURL(qrCodeUrl);
+
+      const qrCodeBuffer = Buffer.from(qrCodeDataUrl.split(",")[1], "base64");
+
+      return qrCodeBuffer;
+    } catch (error) {
+      console.error("Error generating QR Code:", error);
+      throw new Error("Error generating QR Code");
+    }
+  }
 }
