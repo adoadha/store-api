@@ -9,12 +9,10 @@ cloudinary.v2.config({
 
 export function uploadPicture(content: Buffer): Promise<UploadApiResponse> {
   return new Promise((resolve, reject) => {
-    console.log(content, "cloudinary content");
     cloudinary.v2.uploader
       .upload_stream(
         {
           folder: "clean-fastify",
-          // eager : [{ width : 400, height : 400, crop : 'crop', gravity : 'face'}]
         },
         (error, result) => {
           if (error) {
