@@ -5,10 +5,16 @@ import {
   IProduct,
 } from "@/interfaces/product";
 import ProductRepository from "@/repository/product.repository";
+import CommondService from "@/service/commond/commond.service";
+import * as qr from "qrcode";
 
 export default class ProductService {
-  constructor(private productRepo: ProductRepository) {
+  constructor(
+    private productRepo: ProductRepository,
+    private commondService: CommondService
+  ) {
     this.productRepo = productRepo;
+    this.commondService = new CommondService();
   }
 
   async createCategory(request: ICreateCategory) {
@@ -47,6 +53,8 @@ export default class ProductService {
   async createProduct(body: ICreateProduct) {
     // tambahkan validasi check sku sebelum upload
     try {
+      console.log(body, "SERVICE BODY");
+
       const result = await this.productRepo.createTestingProduct(body);
 
       return result;
@@ -75,4 +83,35 @@ export default class ProductService {
   }
 
   async deleteProduct(product_id: number) {}
+
+  async generateQRCode(product_id: number): Promise<Buffer> {
+    try {
+      const url = `http://localhost:3000/product/${product_id}`;
+      const qrCodeBuffer = await qr.toBuffer(url);
+      return qrCodeBuffer;
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+      throw error;
+    }
+  }
+
+  async createProductOld(body: IProduct) {
+    // tambahkan validasi check sku sebelum upload
+    try {
+      const result = await this.productRepo.createProduct(body);
+
+      const qrCodeBuffer = await this.generateQRCode(result);
+
+      const upload = await this.commondService.uploadImage(qrCodeBuffer);
+
+      const resultUploadCloud = await this.productRepo.UpdateUploadQR(
+        upload?.url ?? "",
+        result
+      );
+
+      return result;
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }

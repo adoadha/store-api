@@ -1,9 +1,9 @@
+import auth from "@/middlewares/auth";
 import { FastifyPluginAsync } from "fastify";
 import fp from "fastify-plugin";
-import * as handler from "./handler";
 import categorySchema from "./category-schema.json";
-import productSchema from "./product-schema.json";
-import auth from "@/middlewares/auth";
+import testingSchema from "./testing-schema.json";
+import * as handler from "./handler";
 
 const pluginAsync: FastifyPluginAsync = async (fastify, _option) => {
   fastify.route({
@@ -33,9 +33,9 @@ const pluginAsync: FastifyPluginAsync = async (fastify, _option) => {
     url: "/product/create",
     method: "POST",
     handler: handler.createNewProduct,
-    schema: {
-      body: productSchema,
-    },
+    // schema: {
+    //   body: productSchema,
+    // },
     // preHandler: [auth],
   });
   fastify.route({
@@ -55,6 +55,15 @@ const pluginAsync: FastifyPluginAsync = async (fastify, _option) => {
     method: "GET",
     handler: handler.GetProductById,
     preHandler: [auth],
+  });
+
+  fastify.route({
+    url: "/product/create/testing",
+    method: "POST",
+    handler: handler.createOldProduct,
+    // schema: {
+    //   body: testingSchema,
+    // },
   });
 };
 

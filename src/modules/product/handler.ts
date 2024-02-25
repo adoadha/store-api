@@ -15,7 +15,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 
 const productRepository = new ProductRepository();
 const commondService = new CommondService();
-const productSevice = new ProductService(productRepository);
+const productSevice = new ProductService(productRepository, commondService);
 
 export const createNewCategory = async (
   request: FastifyRequest<{ Body: CreateCategoryBodySchema }>,
@@ -118,6 +118,8 @@ export const createNewProduct = async (
       ],
     };
 
+    console.log(payload, "HANDLER PAYLOAD");
+
     const response = await productSevice.createProduct(payload);
 
     return ResponseSuccess(reply, {
@@ -168,12 +170,33 @@ export const GetProductById = async (
   try {
     const id = request.params.ProductId;
 
-    console.log(id);
     const response = await productSevice.getProductById(id);
 
     return ResponseSuccess(reply, {
       data: response,
       message: "get Successfuly",
+    });
+  } catch (error) {
+    return ErrorHandle(request, reply, error);
+  }
+};
+
+export const createOldProduct = async (
+  request: FastifyRequest<{ Body: IProduct }>,
+  reply: FastifyReply
+): Promise<void> => {
+  try {
+    // if (request.validationError) {
+    //   return ErrorHandle(request, reply, request.validationError);
+    // }
+
+    console.log(request.body, "body");
+
+    const response = await productSevice.createProductOld(request.body);
+
+    return ResponseSuccess(reply, {
+      data: response,
+      message: "Create Successfuly",
     });
   } catch (error) {
     return ErrorHandle(request, reply, error);
