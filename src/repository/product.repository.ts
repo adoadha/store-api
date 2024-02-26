@@ -117,9 +117,12 @@ class ProductRepository {
     return;
   }
 
-  async getProduct(): Promise<IALLProduct[]> {
+  async getProduct(page: number, pageSize: number): Promise<IALLProduct[]> {
     // tambah left join untuK type product dan image
-    const result = await this.DB.many(`SELECT
+    const offset = (page - 1) * pageSize;
+
+    const result = await this.DB.many(
+      `SELECT
     p.id AS product_id,
     p.product_name,
     c.category_name,
@@ -142,8 +145,11 @@ LEFT JOIN
     product_variations pv ON p.id = pv.product_id
 GROUP BY
     p.id, p.product_name, c.category_name
-ORDER BY p.created_at  desc  
-    ;`);
+ORDER BY p.created_at  desc 
+OFFSET $1 LIMIT $2 
+    ;`,
+      [offset, pageSize]
+    );
 
     return result;
   }
@@ -268,16 +274,12 @@ ORDER BY p.created_at  desc
     }
   }
 
-  async CreateDataBarcode(
-    qr_images_url: string,
-    product_id: number
-  ): Promise<void> {
+  async CreateDataBarcode(qr_images_url: string): Promise<void> {
     try {
       const result = await this.DB.one(
         `INSERT INTO images_cloudinary (url_cloudinary, created_at) values ($<url_cloudinary>, now());`,
         {
           qr_images_url,
-          product_id,
         }
       );
 
