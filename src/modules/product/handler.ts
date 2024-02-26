@@ -6,6 +6,7 @@ import {
   IHandlerCreateProduct,
   IProduct,
 } from "@/interfaces/product";
+import { IQueryParams } from "@/interfaces/request";
 import ProductRepository from "@/repository/product.repository";
 import CommondService from "@/service/commond/commond.service";
 import ProductService from "@/service/product/product.service";
@@ -148,11 +149,14 @@ export const deleteProduct = async (
 };
 
 export const GetAllProduct = async (
-  request: FastifyRequest,
+  request: FastifyRequest<{ Querystring: IQueryParams }>,
   reply: FastifyReply
 ): Promise<IProduct[]> => {
   try {
-    const response = await productSevice.getProduct();
+    const page = request.query.page || 1;
+    const pageSize = request.query.pageSize || 25;
+
+    const response = await productSevice.getProduct(page, pageSize);
 
     return ResponseSuccess(reply, {
       data: response,

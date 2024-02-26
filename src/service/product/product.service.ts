@@ -63,9 +63,9 @@ export default class ProductService {
     }
   }
 
-  async getProduct() {
+  async getProduct(page: number, pageSize: number) {
     try {
-      const result = await this.productRepo.getProduct();
+      const result = await this.productRepo.getProduct(page, pageSize);
       return result;
     } catch (error) {
       console.log(error);
