@@ -65,6 +65,12 @@ const pluginAsync: FastifyPluginAsync = async (fastify, _option) => {
     //   body: testingSchema,
     // },
   });
+
+  fastify.route({
+    url: "/product/stocks",
+    method: "GET",
+    handler: handler.GetAllStocks,
+  });
 };
 
 export default fp(pluginAsync, {

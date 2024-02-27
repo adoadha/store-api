@@ -111,3 +111,11 @@ export interface IHandlerCreateVariationProduct {
   variation_stock?: number;
   variation_values: ICreateVariationValues[];
 }
+
+export interface IStocks {
+  variation_id: number;
+  variation_name: string;
+  variation_sku: string;
+  price: number;
+  qty: number;
+}
