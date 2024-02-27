@@ -1,5 +1,4 @@
 import {
-  ICategory,
   ICreateCategory,
   ICreateProduct,
   IProduct,
@@ -108,6 +107,16 @@ export default class ProductService {
         upload?.url ?? "",
         result
       );
+
+      return result;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async getStocks(page: number, pageSize: number) {
+    try {
+      const result = await this.productRepo.getAllStocks(page, pageSize);
 
       return result;
     } catch (error) {
