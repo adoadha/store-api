@@ -9,6 +9,7 @@ import {
   ICreateVariationProductV2,
   IProduct,
   IProductDataV2,
+  IStocks,
   IVariationProduct,
 } from "@/interfaces/product";
 import db from "../lib/pg-connection";
@@ -412,6 +413,26 @@ OFFSET $1 LIMIT $2
     } catch (error) {
       return Promise.reject(error);
     }
+  }
+
+  async getAllStocks(page: number, pageSize: number): Promise<IStocks[]> {
+    const offset = (page - 1) * pageSize;
+
+    const result = await this.DB.many(
+      `SELECT
+    pv.variation_id,
+    pv.variation_name,
+    pv.variation_sku,
+    pv.price,
+    s.qty
+FROM
+    product_variations pv
+JOIN
+    stocks s ON pv.variation_id = s.variation_id;`,
+      [offset, pageSize]
+    );
+
+    return result;
   }
 }
 

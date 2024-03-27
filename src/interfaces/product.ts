@@ -197,3 +197,11 @@ export interface IVariationValue {
 export interface IGalleryImage {
   url_product_cloudinary: string;
 }
+
+export interface IStocks {
+  variation_id: number;
+  variation_name: string;
+  variation_sku: string;
+  price: number;
+  qty: number;
+}

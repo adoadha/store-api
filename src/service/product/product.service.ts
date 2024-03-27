@@ -230,4 +230,14 @@ export default class ProductService {
 
     const deleteProductToDb = await this.deleteProduct(product_id);
   }
+
+  async getStocks(page: number, pageSize: number) {
+    try {
+      const result = await this.productRepo.getAllStocks(page, pageSize);
+
+      return result;
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }

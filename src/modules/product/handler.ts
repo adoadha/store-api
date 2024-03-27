@@ -261,3 +261,22 @@ export const createProductV2 = async (
     return ErrorHandle(request, reply, error);
   }
 };
+
+export const GetAllStocks = async (
+  request: FastifyRequest<{ Querystring: IQueryParams }>,
+  reply: FastifyReply
+): Promise<IProduct[]> => {
+  try {
+    const page = request.query.page || 1;
+    const pageSize = request.query.pageSize || 2;
+
+    const response = await productSevice.getStocks(page, pageSize);
+
+    return ResponseSuccess(reply, {
+      data: response,
+      message: "get Successfuly",
+    });
+  } catch (error) {
+    return ErrorHandle(request, reply, error);
+  }
+};
