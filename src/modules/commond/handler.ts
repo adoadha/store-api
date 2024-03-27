@@ -24,3 +24,20 @@ export const handleUploadImage = async (
     return ErrorHandle(request, reply, error);
   }
 };
+
+export const handleDeleteImage = async (
+  request: FastifyRequest<{ Params: { public_id: string } }>,
+  reply: FastifyReply
+): Promise<void> => {
+  try {
+    const { public_id } = request.params;
+
+    await commondService.deleteImageCloudinary(public_id);
+
+    return ResponseSuccess(reply, {
+      message: "Delete Successfuly",
+    });
+  } catch (error) {
+    return ErrorHandle(request, reply, error);
+  }
+};

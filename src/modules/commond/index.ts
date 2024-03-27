@@ -8,6 +8,11 @@ const pluginAsync: FastifyPluginAsync = async (fastify, _option) => {
     method: "POST",
     handler: handler.handleUploadImage,
   });
+  fastify.route({
+    url: "/cloudinary/delete/:public_id",
+    method: "POST",
+    handler: handler.handleDeleteImage, // Menggunakan handleDeleteImage
+  });
 };
 
 export default fp(pluginAsync, {

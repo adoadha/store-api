@@ -3,11 +3,16 @@ import {
   ICategory,
   ICreateCategory,
   ICreateProduct,
+  ICreateProductGalleryProductV2,
+  ICreateProductV2,
   ICreateVariationProduct,
+  ICreateVariationProductV2,
   IProduct,
+  IProductDataV2,
   IVariationProduct,
 } from "@/interfaces/product";
 import db from "../lib/pg-connection";
+import { deleteProduct } from "@/modules/product/handler";
 
 class ProductRepository {
   private static instance: ProductRepository;
@@ -111,12 +116,6 @@ class ProductRepository {
     }
   }
 
-  async deleteProduct(params: IProduct): Promise<void> {
-    const result = await this.DB.one(`DELETE FROM product WHERE id=$1`);
-
-    return;
-  }
-
   async getProduct(page: number, pageSize: number): Promise<IALLProduct[]> {
     // tambah left join untuK type product dan image
     const offset = (page - 1) * pageSize;
@@ -126,6 +125,7 @@ class ProductRepository {
     p.id AS product_id,
     p.product_name,
     c.category_name,
+    p.thumbnail_images_url,
     array_agg(
         jsonb_build_object(
             'variation_name', pv.variation_name,
@@ -154,9 +154,10 @@ OFFSET $1 LIMIT $2
     return result;
   }
 
-  async getProductById(productId: number) {
+  async getProductById(productId: number): Promise<IProductDataV2> {
+    let whereClause = `  WHERE p.id = $<productId>`;
     const result = await this.DB.oneOrNone(
-      ` SELECT
+      `SELECT
       p.id AS product_id,
       p.product_name,
       p.description,
@@ -165,50 +166,62 @@ OFFSET $1 LIMIT $2
       p.package_width,
       p.package_height,
       p.qr_images_url,
-      jsonb_agg(
-        jsonb_build_object(
-          'variation_id', pv.variation_id ,
-          'variation_sku', pv.variation_sku,
-          'variation_name', pv.variation_name,
-          'hpp', pv.hpp,
-          'price', pv.price,
-          'stocks', COALESCE(pv.stocks, '[]'::jsonb),
-          'grosir_price', pv.grosir_price
-        )
-      ) AS variation_values
-    FROM
+      p.thumbnail_images_url,
+      COALESCE(vv.variation_values, '[]') AS variation_values,
+      COALESCE(gi.gallery_images, '[]') AS gallery_images
+  FROM
       product p
-    JOIN
+  JOIN
       category c ON p.category_id = c.id
-    LEFT JOIN LATERAL (
+  LEFT JOIN LATERAL (
       SELECT
-        pv.variation_id ,
-        pv.variation_sku,
-        pv.variation_name,
-        pv.hpp,
-        pv.price,
-        pv.grosir_price,
-        jsonb_agg(
-          jsonb_build_object(
-            'qty', s.qty,
-            'created_at', s.created_at
-          )
-        ) AS stocks
+          jsonb_agg(
+              jsonb_build_object(
+                  'variation_id', pv.variation_id ,
+                  'variation_sku', pv.variation_sku,
+                  'variation_name', pv.variation_name,
+                  'hpp', pv.hpp,
+                  'price', pv.price,
+                  'slash_price', pv.slash_price,
+                  'qty', COALESCE(CAST(s.qty AS INTEGER), 0),  
+                  'grosir_price', pv.grosir_price,
+                  'image_url', pv.image_url
+              )
+          ) AS variation_values
       FROM
-        product_variations pv
-      LEFT JOIN
-        stocks s ON pv.variation_id  = s.variation_id
+          product_variations pv
+      LEFT JOIN LATERAL (
+          SELECT
+              s.qty
+          FROM
+              stocks s
+          WHERE
+              s.variation_id = pv.variation_id
+          LIMIT 1
+      ) s ON true
       WHERE
-        pv.product_id = p.id
+          pv.product_id = p.id
       GROUP BY
-        pv.variation_id , pv.variation_sku, pv.variation_name, pv.hpp, pv.price, pv.grosir_price
-    ) pv ON true
-    WHERE
-      p.id = $1
-    GROUP BY
-      p.id, p.product_name, p.description, p.package_weight, c.category_name, p.package_width, p.package_height, p.qr_images_url;;
-    `,
-      productId
+          p.id
+  ) vv ON true
+  LEFT JOIN LATERAL (
+      SELECT
+          jsonb_agg(
+              jsonb_build_object(
+                  'url_product_cloudinary', pgi.url_product_cloudinary
+              )
+          ) AS gallery_images
+      FROM
+          product_gallery_images pgi
+      WHERE
+          pgi.product_id = p.id
+      GROUP BY
+          p.id
+  ) gi ON true
+  WHERE 
+      p.id = $<productId>;
+`,
+      { productId }
     );
 
     return result;
@@ -255,13 +268,13 @@ OFFSET $1 LIMIT $2
     }
   }
 
-  async UpdateUploadQR(
+  async updateUploadQR(
     qr_images_url: string,
     product_id: number
   ): Promise<void> {
     try {
       const result = await this.DB.one(
-        `update product set qr_images_url = $<qr_images_url> where id = $<product_id>`,
+        `update product set qr_images_url = $<qr_images_url> where id = $<product_id> RETURNING *`,
         {
           qr_images_url,
           product_id,
@@ -274,7 +287,7 @@ OFFSET $1 LIMIT $2
     }
   }
 
-  async CreateDataBarcode(qr_images_url: string): Promise<void> {
+  async createDataBarcode(qr_images_url: string): Promise<void> {
     try {
       const result = await this.DB.one(
         `INSERT INTO images_cloudinary (url_cloudinary, created_at) values ($<url_cloudinary>, now());`,
@@ -284,6 +297,118 @@ OFFSET $1 LIMIT $2
       );
 
       return result;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  async deleteProduct(params: IProduct): Promise<void> {
+    const result = await this.DB.one(`DELETE FROM product WHERE id=$1`);
+
+    return;
+  }
+
+  async deleteVariations(variation_id: number): Promise<void> {}
+
+  async createProductV2(params: ICreateProductV2): Promise<any> {
+    try {
+      const productResult = await this.DB.one(
+        `
+        INSERT INTO product (product_name, description, category_id, package_weight, package_width, package_height, thumbnail_images_url, created_at)
+        VALUES (
+          $<product_name>, $<description>, $<category_id>, $<package_weight>, $<package_width>, $<package_height>, $<thumbnail_images_url>, NOW()
+        ) RETURNING id
+        `,
+        params
+      );
+
+      return productResult;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  async createProductVariationsV2(
+    params: ICreateVariationProductV2
+  ): Promise<any[]> {
+    try {
+      const variationResult = await this.DB.query(
+        `
+        INSERT INTO product_variations 
+        (product_id, variation_name, variation_sku, created_at, price, slash_price, grosir_price, id_item_groceries, hpp, image_url)
+        VALUES 
+        ($1, $2, $3, now(), $4, $5, $6, $7, $8, $9)
+        RETURNING *
+        `,
+        [
+          params.product_id,
+          params.variation_name,
+          params.variation_sku,
+          params.price,
+          params.slash_price,
+          params.grosir_price,
+          params.id_item_groceries,
+          params.hpp,
+          params.images_url,
+        ]
+      );
+      return variationResult;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  // async createProductGalleryV2(
+  //   params: ICreateProductGalleryProductV2
+  // ): Promise<any> {
+  //   try {
+  //     const uploadGallery = await this.DB.one(
+  //       `
+  //       INSERT INTO product_gallery_images (url_product_cloudinary, product_id, created_at)
+  //       VALUES( $<url_product_cloudinary>, $<product_id>, now()));
+  //        RETURNING *
+  //       `,
+  //       params
+  //     );
+
+  //     return uploadGallery;
+  //   } catch (error) {
+  //     return Promise.reject(error);
+  //   }
+  // }
+
+  async createProductGalleryV2(
+    params: ICreateProductGalleryProductV2 | ICreateProductGalleryProductV2[]
+  ): Promise<any> {
+    try {
+      if (Array.isArray(params)) {
+        // Jika params adalah array, gunakan Promise.all untuk menangani banyak entri
+        const uploads = await Promise.all(
+          params.map(async (item) => {
+            const uploadGallery = await this.DB.one(
+              `
+                    INSERT INTO product_gallery_images (url_product_cloudinary, product_id, created_at)
+                    VALUES($<url_product_cloudinary>, $<product_id>, now())
+                    RETURNING *
+                    `,
+              item
+            );
+            return uploadGallery;
+          })
+        );
+        return uploads;
+      } else {
+        // Jika params adalah objek tunggal, lakukan operasi seperti sebelumnya
+        const uploadGallery = await this.DB.one(
+          `
+                INSERT INTO product_gallery_images (url_product_cloudinary, product_id, created_at)
+                VALUES($<url_product_cloudinary>, $<product_id>, now())
+                RETURNING *
+                `,
+          params
+        );
+        return uploadGallery;
+      }
     } catch (error) {
       return Promise.reject(error);
     }

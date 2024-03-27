@@ -39,10 +39,10 @@ const pluginAsync: FastifyPluginAsync = async (fastify, _option) => {
     // preHandler: [auth],
   });
   fastify.route({
-    url: "/product/delete",
+    url: "/product/:product_id",
     method: "DELETE",
     handler: handler.deleteProduct,
-    preHandler: [auth],
+    // preHandler: [auth],
   });
   fastify.route({
     url: "/product",
@@ -54,13 +54,22 @@ const pluginAsync: FastifyPluginAsync = async (fastify, _option) => {
     url: "/product/:ProductId",
     method: "GET",
     handler: handler.GetProductById,
-    preHandler: [auth],
+    // preHandler: [auth],
   });
 
   fastify.route({
     url: "/product/create/testing",
     method: "POST",
     handler: handler.createOldProduct,
+    // schema: {
+    //   body: testingSchema,
+    // },
+  });
+
+  fastify.route({
+    url: "/hamid",
+    method: "POST",
+    handler: handler.createProductV2,
     // schema: {
     //   body: testingSchema,
     // },

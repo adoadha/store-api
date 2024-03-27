@@ -16,7 +16,7 @@ export function uploadPicture(content: Buffer): Promise<UploadApiResponse> {
         },
         (error, result) => {
           if (error) {
-            console.log(error, "CLOUDINARY ERRORX");
+            console.log(error, "CLOUDINARY ERROR");
             reject("Upload failed");
           } else if (result) {
             resolve(result);
@@ -26,5 +26,20 @@ export function uploadPicture(content: Buffer): Promise<UploadApiResponse> {
         }
       )
       .end(content);
+  });
+}
+
+export function deletePicture(public_id: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    cloudinary.v2.uploader.destroy(public_id, (error, result) => {
+      if (error) {
+        console.log(error, "CLOUDINARY ERROR");
+        reject("Deletion failed");
+      } else if (result) {
+        resolve(result);
+      } else {
+        reject("Internal server error");
+      }
+    });
   });
 }
