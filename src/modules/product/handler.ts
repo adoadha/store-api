@@ -3,7 +3,9 @@ import {
   ICategory,
   ICreateCategory,
   ICreateProduct,
+  ICreateProductTesting,
   IHandlerCreateProduct,
+  IHandlerCreateProductV2,
   IProduct,
 } from "@/interfaces/product";
 import { IQueryParams } from "@/interfaces/request";
@@ -119,8 +121,6 @@ export const createNewProduct = async (
       ],
     };
 
-    console.log(payload, "HANDLER PAYLOAD");
-
     const response = await productSevice.createProduct(payload);
 
     return ResponseSuccess(reply, {
@@ -133,11 +133,12 @@ export const createNewProduct = async (
 };
 
 export const deleteProduct = async (
-  request: FastifyRequest<{ Body: IProduct }>,
+  request: FastifyRequest<{ Params: { product_id: number } }>,
   reply: FastifyReply
-): Promise<void> => {
+): Promise<IProduct> => {
   try {
-    const response = await productSevice.deleteCategory(request.body.id);
+    const { product_id } = request.params;
+    const response = await productSevice.deleteProduct(product_id);
 
     return ResponseSuccess(reply, {
       data: response,
@@ -197,6 +198,60 @@ export const createOldProduct = async (
     console.log(request.body, "body");
 
     const response = await productSevice.createProductOld(request.body);
+
+    return ResponseSuccess(reply, {
+      data: response,
+      message: "Create Successfuly",
+    });
+  } catch (error) {
+    return ErrorHandle(request, reply, error);
+  }
+};
+
+export const createProductV2 = async (
+  request: FastifyRequest<{ Body: ICreateProductTesting }>,
+  reply: FastifyReply
+): Promise<void> => {
+  try {
+    // if (request.validationError) {
+    //   return ErrorHandle(request, reply, request.validationError);
+    // }
+
+    // const result = await commondService.uploadImage(
+    //   request.body.variants[0].image_url
+    // );
+
+    const payload: ICreateProductTesting = {
+      product_name: request.body.product_name,
+      description: request.body.description,
+      category_id: request.body.category_id,
+      package_weight: request.body.package_weight,
+      package_width: request.body.package_width,
+      package_height: request.body.package_height,
+      thumbnail_image_url: request.body.thumbnail_image_url,
+      variants: [
+        {
+          product_id: request.body.variants[0].product_id,
+          variation_name: request.body.variants[0].variation_name,
+          variation_sku: request.body.variants[0].variation_sku,
+          price: request.body.variants[0].price,
+          slash_price: request.body.variants[0].slash_price,
+          grosir_price: request.body.variants[0].grosir_price,
+          id_item_groceries: request.body.variants[0].id_item_groceries,
+          hpp: request.body.variants[0].hpp,
+          images_url: request.body.variants[0].images_url,
+        },
+      ],
+      product_gallery: [
+        {
+          url_product_cloudinary:
+            request.body.product_gallery[0].url_product_cloudinary,
+          product_id: request.body.product_gallery[0].product_id,
+        },
+      ],
+    };
+
+    const response = await productSevice.createProductV2(payload);
 
     return ResponseSuccess(reply, {
       data: response,
