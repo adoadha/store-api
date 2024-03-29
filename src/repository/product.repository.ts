@@ -9,11 +9,9 @@ import {
   ICreateVariationProductV2,
   IProduct,
   IProductDataV2,
-  IStocks,
   IVariationProduct,
 } from "@/interfaces/product";
 import db from "../lib/pg-connection";
-import { deleteProduct } from "@/modules/product/handler";
 
 class ProductRepository {
   private static instance: ProductRepository;
@@ -155,8 +153,8 @@ OFFSET $1 LIMIT $2
     return result;
   }
 
-  async getProductById(productId: number): Promise<IProductDataV2> {
-    let whereClause = `  WHERE p.id = $<productId>`;
+  async getProductById(product_id: number): Promise<IProductDataV2> {
+    let whereClause = `p.id = $<product_id>`;
     const result = await this.DB.oneOrNone(
       `SELECT
       p.id AS product_id,
@@ -192,13 +190,12 @@ OFFSET $1 LIMIT $2
       FROM
           product_variations pv
       LEFT JOIN LATERAL (
-          SELECT
-              s.qty
+          select 
+             SUM(COALESCE(CAST(s.qty AS INTEGER), 0)) as qty
           FROM
               stocks s
           WHERE
               s.variation_id = pv.variation_id
-          LIMIT 1
       ) s ON true
       WHERE
           pv.product_id = p.id
@@ -220,9 +217,9 @@ OFFSET $1 LIMIT $2
           p.id
   ) gi ON true
   WHERE 
-      p.id = $<productId>;
+     ${whereClause};
 `,
-      { productId }
+      { product_id }
     );
 
     return result;
@@ -336,9 +333,9 @@ OFFSET $1 LIMIT $2
       const variationResult = await this.DB.query(
         `
         INSERT INTO product_variations 
-        (product_id, variation_name, variation_sku, created_at, price, slash_price, grosir_price, id_item_groceries, hpp, image_url)
+        (product_id, variation_name, variation_sku, created_at, price, slash_price, grosir_price, hpp, image_url)
         VALUES 
-        ($1, $2, $3, now(), $4, $5, $6, $7, $8, $9)
+        ($1, $2, $3, now(), $4, $5, $6, $7, $8)
         RETURNING *
         `,
         [
@@ -348,7 +345,6 @@ OFFSET $1 LIMIT $2
           params.price,
           params.slash_price,
           params.grosir_price,
-          params.id_item_groceries,
           params.hpp,
           params.images_url,
         ]
@@ -413,26 +409,6 @@ OFFSET $1 LIMIT $2
     } catch (error) {
       return Promise.reject(error);
     }
-  }
-
-  async getAllStocks(page: number, pageSize: number): Promise<IStocks[]> {
-    const offset = (page - 1) * pageSize;
-
-    const result = await this.DB.many(
-      `SELECT
-    pv.variation_id,
-    pv.variation_name,
-    pv.variation_sku,
-    pv.price,
-    s.qty
-FROM
-    product_variations pv
-JOIN
-    stocks s ON pv.variation_id = s.variation_id;`,
-      [offset, pageSize]
-    );
-
-    return result;
   }
 }
 

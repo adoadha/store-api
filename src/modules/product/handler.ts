@@ -237,44 +237,23 @@ export const createProductV2 = async (
           price: request.body.variants[0].price,
           slash_price: request.body.variants[0].slash_price,
           grosir_price: request.body.variants[0].grosir_price,
-          id_item_groceries: request.body.variants[0].id_item_groceries,
           hpp: request.body.variants[0].hpp,
           images_url: request.body.variants[0].images_url,
         },
       ],
-      product_gallery: [
-        {
-          url_product_cloudinary:
-            request.body.product_gallery[0].url_product_cloudinary,
-          product_id: request.body.product_gallery[0].product_id,
-        },
-      ],
     };
-
+    // product_gallery: [
+    //   {
+    //     url_product_cloudinary:
+    //       request.body.product_gallery[0].url_product_cloudinary,
+    //     product_id: request.body.product_gallery[0].product_id,
+    //   },
+    // ],
     const response = await productSevice.createProductV2(payload);
 
     return ResponseSuccess(reply, {
       data: response,
       message: "Create Successfuly",
-    });
-  } catch (error) {
-    return ErrorHandle(request, reply, error);
-  }
-};
-
-export const GetAllStocks = async (
-  request: FastifyRequest<{ Querystring: IQueryParams }>,
-  reply: FastifyReply
-): Promise<IProduct[]> => {
-  try {
-    const page = request.query.page || 1;
-    const pageSize = request.query.pageSize || 2;
-
-    const response = await productSevice.getStocks(page, pageSize);
-
-    return ResponseSuccess(reply, {
-      data: response,
-      message: "get Successfuly",
     });
   } catch (error) {
     return ErrorHandle(request, reply, error);

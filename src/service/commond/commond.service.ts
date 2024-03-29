@@ -22,7 +22,7 @@ export default class CommondService {
     }
   }
 
-  async extractUrl(url: string) {
+  extractUrl(url: string) {
     const lastIndex = url.lastIndexOf("/");
     const fileNameWithExtension = url.substring(lastIndex + 1);
     const dotIndex = fileNameWithExtension.lastIndexOf(".");
