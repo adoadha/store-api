@@ -76,7 +76,7 @@ export interface ICreateProductTesting {
   package_height?: number;
   thumbnail_image_url: string;
   variants: ICreateVariationProductV2[];
-  product_gallery: ICreateProductGalleryProductV2[];
+  // product_gallery: ICreateProductGalleryProductV2[];
 }
 
 export interface ICreateVariationProductV2 {
@@ -149,7 +149,6 @@ export interface ICreateVariationProductV2 {
   price: number;
   slash_price?: number;
   grosir_price?: number;
-  id_item_groceries?: number;
   hpp?: number;
   images_url: string;
 }
@@ -196,12 +195,4 @@ export interface IVariationValue {
 }
 export interface IGalleryImage {
   url_product_cloudinary: string;
-}
-
-export interface IStocks {
-  variation_id: number;
-  variation_name: string;
-  variation_sku: string;
-  price: number;
-  qty: number;
 }

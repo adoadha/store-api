@@ -141,23 +141,21 @@ export default class ProductService {
           price: variant.price,
           slash_price: variant.slash_price,
           grosir_price: variant.grosir_price,
-          id_item_groceries: variant.id_item_groceries,
           hpp: variant.hpp,
           images_url: variant.images_url,
         };
 
-        const createProductVariation =
-          await this.productRepo.createProductVariationsV2(bodyCreateVariation);
+        await this.productRepo.createProductVariationsV2(bodyCreateVariation);
       }
 
-      const productGalleryPayload = body.product_gallery.map((item) => ({
-        url_product_cloudinary: item.url_product_cloudinary,
-        product_id: createdProduct.id,
-      }));
+      // const productGalleryPayload = body.product_gallery.map((item) => ({
+      //   url_product_cloudinary: item.url_product_cloudinary,
+      //   product_id: createdProduct.id,
+      // }));
 
-      const createImageGallery = await this.productRepo.createProductGalleryV2(
-        productGalleryPayload
-      );
+      // const createImageGallery = await this.productRepo.createProductGalleryV2(
+      //   productGalleryPayload
+      // );
 
       const qrCodeBuffer = await this.generateQRCode(createdProduct.id);
 
@@ -182,20 +180,14 @@ export default class ProductService {
     }
 
     // delete thumnail
-    const extractThumbnail = await this.commondService.extractUrl(
+    const extractThumbnail = this.commondService.extractUrl(
       findProduct.thumbnail_images_url
     );
-    const deleteThumbnail = await this.commondService.deleteImageCloudinary(
-      extractThumbnail
-    );
+    await this.commondService.deleteImageCloudinary(extractThumbnail);
 
     // delete qr images
-    const extractQR = await this.commondService.extractUrl(
-      findProduct.qr_images_url
-    );
-    const deleteQRFromCloud = await this.commondService.deleteImageCloudinary(
-      extractQR
-    );
+    const extractQR = this.commondService.extractUrl(findProduct.qr_images_url);
+    await this.commondService.deleteImageCloudinary(extractQR);
 
     // delete product gallery
     const galleryURL = findProduct.gallery_images.map(
@@ -206,8 +198,7 @@ export default class ProductService {
       this.commondService.extractUrl(url)
     );
 
-    const resultExtract = await Promise.all(extractUrl);
-    const deleteGalleryFromCloud = resultExtract.map((public_id) =>
+    const deleteGalleryFromCloud = extractUrl.map((public_id) =>
       this.commondService.deleteImageCloudinary(public_id)
     );
     await Promise.all(deleteGalleryFromCloud);
@@ -219,23 +210,19 @@ export default class ProductService {
     const extracVariantUrl = getImageVariant.map((url) =>
       this.commondService.extractUrl(url)
     );
-    const resultExtractVariant = await Promise.all(extracVariantUrl);
 
-    const deleteVariationFromCloud = resultExtractVariant.map((public_id) =>
+    const deleteVariationFromCloud = extracVariantUrl.map((public_id) =>
       this.commondService.deleteImageCloudinary(public_id)
     );
     await Promise.all(deleteVariationFromCloud);
 
     //  delete product from db
 
-    const deleteProductToDb = await this.deleteProduct(product_id);
+    await this.deleteProduct(product_id);
   }
 
-  async getStocks(page: number, pageSize: number) {
+  async getTypeProduct() {
     try {
-      const result = await this.productRepo.getAllStocks(page, pageSize);
-
-      return result;
     } catch (error) {
       console.log(error);
     }
